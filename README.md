@@ -2,9 +2,13 @@
 title: "Evolutions Covid-19 (France)"
 date: "2020-05-06"
 output:
-  rmdformats::html_clean:
-    thumbnails: FALSE 
-    use_bookdown: FALSE 
+  md_document:
+    variant: markdown_github
+    preserve_yaml: TRUE
+    toc: TRUE
+#  rmdformats::html_clean:
+#    thumbnails: FALSE 
+#    use_bookdown: FALSE 
 ---
 
 -   [Données](#données)
@@ -45,7 +49,7 @@ Pyramides des âges
 
 Au 6 avril 2020 (pic)
 
-<img src="Evolutions_Covid-19_France_files/figure-markdown_github/pyra-1.png" style="display: block; margin: auto;" />
+<img src="README_files/figure-markdown_github/pyra-1.png" style="display: block; margin: auto;" />
 
 Taux par âge
 ------------
@@ -75,47 +79,47 @@ Evolution des stocks
 Décès cumulés
 -------------
 
-<img src="Evolutions_Covid-19_France_files/figure-markdown_github/dc_cum-1.png" style="display: block; margin: auto;" />
+<img src="README_files/figure-markdown_github/dc_cum-1.png" style="display: block; margin: auto;" />
 
 Réanimation et hospitalisation
 ------------------------------
 
-<img src="Evolutions_Covid-19_France_files/figure-markdown_github/stocks_reahospi-1.png" style="display: block; margin: auto;" />
+<img src="README_files/figure-markdown_github/stocks_reahospi-1.png" style="display: block; margin: auto;" />
 
 Réanimation par région
 ----------------------
 
-<img src="Evolutions_Covid-19_France_files/figure-markdown_github/stocks_rea_region-1.png" style="display: block; margin: auto;" />
+<img src="README_files/figure-markdown_github/stocks_rea_region-1.png" style="display: block; margin: auto;" />
 
 Réanimation par département
 ---------------------------
 
-<img src="Evolutions_Covid-19_France_files/figure-markdown_github/stocks_rea_dept-1.png" style="display: block; margin: auto;" />
+<img src="README_files/figure-markdown_github/stocks_rea_dept-1.png" style="display: block; margin: auto;" />
 
-<img src="Evolutions_Covid-19_France_files/figure-markdown_github/taux_occup_dept-1.png" style="display: block; margin: auto;" />
+<img src="README_files/figure-markdown_github/taux_occup_dept-1.png" style="display: block; margin: auto;" />
 
 NB : à partir du nombre de lits en réanimation en 2018 (Source: DREES)
 
 Décès cumulés par âge
 ---------------------
 
-<img src="Evolutions_Covid-19_France_files/figure-markdown_github/dc_cum_age1-1.png" style="display: block; margin: auto;" />
+<img src="README_files/figure-markdown_github/dc_cum_age1-1.png" style="display: block; margin: auto;" />
 
-<img src="Evolutions_Covid-19_France_files/figure-markdown_github/dc_cum_age2-1.png" style="display: block; margin: auto;" />
+<img src="README_files/figure-markdown_github/dc_cum_age2-1.png" style="display: block; margin: auto;" />
 
 Réanimation par âge
 -------------------
 
-<img src="Evolutions_Covid-19_France_files/figure-markdown_github/stocks_rea_age1-1.png" style="display: block; margin: auto;" />
+<img src="README_files/figure-markdown_github/stocks_rea_age1-1.png" style="display: block; margin: auto;" />
 
-<img src="Evolutions_Covid-19_France_files/figure-markdown_github/stocks_rea_age2-1.png" style="display: block; margin: auto;" />
+<img src="README_files/figure-markdown_github/stocks_rea_age2-1.png" style="display: block; margin: auto;" />
 
 Hospitalisations par âge
 ------------------------
 
-<img src="Evolutions_Covid-19_France_files/figure-markdown_github/stocks_hosp_age1-1.png" style="display: block; margin: auto;" />
+<img src="README_files/figure-markdown_github/stocks_hosp_age1-1.png" style="display: block; margin: auto;" />
 
-<img src="Evolutions_Covid-19_France_files/figure-markdown_github/stocks_hosp_age2-1.png" style="display: block; margin: auto;" />
+<img src="README_files/figure-markdown_github/stocks_hosp_age2-1.png" style="display: block; margin: auto;" />
 
 Evolutions des flux
 ===================
@@ -123,35 +127,35 @@ Evolutions des flux
 Nouveaux cas (réa/hospi/dc/rad)
 -------------------------------
 
-<img src="Evolutions_Covid-19_France_files/figure-markdown_github/nouveaux1-1.png" style="display: block; margin: auto;" />
+<img src="README_files/figure-markdown_github/nouveaux1-1.png" style="display: block; margin: auto;" />
 
-<img src="Evolutions_Covid-19_France_files/figure-markdown_github/nouveaux2-1.png" style="display: block; margin: auto;" />
+<img src="README_files/figure-markdown_github/nouveaux2-1.png" style="display: block; margin: auto;" />
 
-<img src="Evolutions_Covid-19_France_files/figure-markdown_github/nouveauxrel1-1.png" style="display: block; margin: auto;" />
+<img src="README_files/figure-markdown_github/nouveauxrel1-1.png" style="display: block; margin: auto;" />
 
 Excédent de sorties de l’hôpital
 --------------------------------
 
-<img src="Evolutions_Covid-19_France_files/figure-markdown_github/excedent-1.png" style="display: block; margin: auto;" />
+<img src="README_files/figure-markdown_github/excedent-1.png" style="display: block; margin: auto;" />
 
 Décès par région
 ----------------
 
-<img src="Evolutions_Covid-19_France_files/figure-markdown_github/new_dc_region-1.png" style="display: block; margin: auto;" />
+<img src="README_files/figure-markdown_github/new_dc_region-1.png" style="display: block; margin: auto;" />
 
 Décès par département
 ---------------------
 
-<img src="Evolutions_Covid-19_France_files/figure-markdown_github/new_dc_dept-1.png" style="display: block; margin: auto;" />
+<img src="README_files/figure-markdown_github/new_dc_dept-1.png" style="display: block; margin: auto;" />
 
 Réanimation par département
 ---------------------------
 
-<img src="Evolutions_Covid-19_France_files/figure-markdown_github/new_rea_dept-1.png" style="display: block; margin: auto;" />
+<img src="README_files/figure-markdown_github/new_rea_dept-1.png" style="display: block; margin: auto;" />
 
 Décès par âge
 -------------
 
-<img src="Evolutions_Covid-19_France_files/figure-markdown_github/new_dc_age1-1.png" style="display: block; margin: auto;" />
+<img src="README_files/figure-markdown_github/new_dc_age1-1.png" style="display: block; margin: auto;" />
 
-<img src="Evolutions_Covid-19_France_files/figure-markdown_github/new_dc_age2-1.png" style="display: block; margin: auto;" />
+<img src="README_files/figure-markdown_github/new_dc_age2-1.png" style="display: block; margin: auto;" />

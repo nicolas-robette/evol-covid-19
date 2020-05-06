@@ -2,8 +2,10 @@
 title: "Evolutions Covid-19 (France)"
 date: "`r Sys.Date()`"
 output:
-  md_document(
-    toc=TRUE)
+  md_document:
+    variant: markdown_github
+    preserve_yaml: TRUE
+    toc: TRUE
 #  rmdformats::html_clean:
 #    thumbnails: FALSE 
 #    use_bookdown: FALSE 
@@ -267,6 +269,7 @@ p1 <- stock %>% filter(name=='rea') %>%
                   scale_x_date(date_labels = "%d %b", date_breaks = "3 days") +
                   theme(axis.text.x = element_text(angle=60, hjust = 1)) +
                   xlab(NULL) + ylab(NULL) +
+                  expand_limits(y=0) +
                   ggtitle("Nombre de personnes en réanimation")
 
 p2 <- stock %>% filter(name=='hosp') %>%
@@ -276,6 +279,7 @@ p2 <- stock %>% filter(name=='hosp') %>%
                   scale_x_date(date_labels = "%d %b", date_breaks = "3 days") +
                   theme(axis.text.x = element_text(angle=60, hjust = 1)) +
                   xlab(NULL) + ylab(NULL) +
+                  expand_limits(y=0) +
                   ggtitle("Nombre de personnes hospitalisées")
 
 grid.arrange(p1, p2, ncol=2)
@@ -298,20 +302,21 @@ parregion %>% filter(name=='rea' & reg %in% c('11','28','44','53')) %>%
 ## Réanimation par département
 
 ```{r stocks_rea_dept, fig.align="center", fig.width=7, fig.height=4}
-stockdep %>% filter(name=='rea' & dep %in% c('14','36','67','75','93')) %>%
+stockdep %>% filter(name=='rea' & dep %in% c('14','29','36','61','67','75','88','93')) %>%
              ggplot(aes(x = jour, y = value, color=dep)) + 
                geom_line() +
                theme_minimal() +
                scale_x_date(date_labels = "%d %b", date_breaks = "2 days") +
                theme(axis.text.x = element_text(angle=60, hjust = 1)) +
                xlab(NULL) + ylab(NULL) +
-               ggtitle("Nombre de personnes en réanimation par département")
+               ggtitle("Nombre de personnes en réanimation par département") +
+               scale_colour_brewer(palette='Dark2')
 ```
 
 ```{r taux_occup_dept, fig.align="center", fig.width=7, fig.height=4}
 stockdep %>% left_join(lits, by=c('dep'='code_dept')) %>%
              mutate(ratio = 100*value/lits_rea) %>% 
-             filter(name=='rea' & dep %in% c('14','36','67','75','93')) %>%
+             filter(name=='rea' & dep %in% c('14','29','36','61','67','75','88','93')) %>%
              ggplot(aes(x = jour, y = ratio, color=dep)) + 
                geom_line() +
                theme_minimal() +
@@ -319,7 +324,8 @@ stockdep %>% left_join(lits, by=c('dep'='code_dept')) %>%
                theme(axis.text.x = element_text(angle=60, hjust = 1)) +
                xlab(NULL) + ylab(NULL) +
                geom_hline(aes(yintercept=100), size=0.5, linetype='dashed', color='darkgray') +
-               ggtitle("Taux d'occupation en réanimation par département")
+               ggtitle("Taux d'occupation en réanimation par département") +
+               scale_colour_brewer(palette='Dark2')
 ```
 
 NB : à partir du nombre de lits en réanimation en 2018 (Source: DREES)
@@ -509,27 +515,29 @@ parregion %>% filter(name=='newdc' & reg %in% c('11','28','44','53')) %>%
 ## Décès par département
 
 ```{r new_dc_dept, fig.align="center", fig.width=7, fig.height=4}
-nouveauxdep %>% filter(name=='décès' & dep %in% c('14','36','67','75','93')) %>%
+nouveauxdep %>% filter(name=='décès' & dep %in% c('14','29','36','61','67','75','88','93')) %>%
                 ggplot(aes(x = jour, y = value, color=dep)) + 
                   geom_line(aes(y = smoute(value))) + #rollmean(value, 7, fill=rep("extend",3)))) +
                   theme_minimal() +
                   scale_x_date(date_labels = "%d %b", date_breaks = "2 days") +
                   theme(axis.text.x = element_text(angle=60, hjust = 1)) +
                   xlab(NULL) + ylab(NULL) +
-                  ggtitle("Décès par département")
+                  ggtitle("Décès par département") +
+                  scale_colour_brewer(palette='Dark2')
 ```
 
 ## Réanimation par département
 
 ```{r new_rea_dept, fig.align="center", fig.width=7, fig.height=4}
-nouveauxdep %>% filter(name=='réanimation' & dep %in% c('14','36','67','75','93')) %>%
+nouveauxdep %>% filter(name=='réanimation' & dep %in% c('14','29','36','61','67','75','88','93')) %>%
                 ggplot(aes(x = jour, y = value, color=dep)) + 
                   geom_line(aes(y = smoute(value))) + #rollmean(value, 7, fill=rep("extend",3))), size = 0.5) +
                   theme_minimal() +
                   scale_x_date(date_labels = "%d %b", date_breaks = "2 days") +
                   theme(axis.text.x = element_text(angle=60, hjust = 1)) +
                   xlab(NULL) + ylab(NULL) +
-                  ggtitle("Nouveaux cas en réanimation par département")
+                  ggtitle("Nouveaux cas en réanimation par département") +
+                  scale_colour_brewer(palette='Dark2')
 ```
 
 ## Décès par âge
