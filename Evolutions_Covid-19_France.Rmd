@@ -1,0 +1,568 @@
+---
+title: "Evolutions Covid-19 (France)"
+date: "`r Sys.Date()`"
+output:
+  md_document(
+    toc=TRUE)
+#  rmdformats::html_clean:
+#    thumbnails: FALSE 
+#    use_bookdown: FALSE 
+---
+
+```{r setup, echo=FALSE, cache=FALSE}
+library(knitr)
+library(rmdformats)
+
+## Global options
+options(max.print="75")
+opts_chunk$set(echo=FALSE,
+	             cache=TRUE,
+               prompt=FALSE,
+               tidy=FALSE,
+               comment=NA,
+               message=FALSE,
+               warning=FALSE)
+opts_knit$set(width=75)
+```
+
+```{r lib}
+library(tidyverse)
+library(rvest)
+library(gridExtra)
+library(zoo)
+library(readxl)
+```
+
+
+# Données
+
+Données hospitalières (donc hors Ehpad, etc.)
+
+Source : https://www.data.gouv.fr/fr/datasets/donnees-hospitalieres-relatives-a-lepidemie-de-covid-19/
+
+```{r import}
+doc <- read_html("https://www.data.gouv.fr/fr/datasets/donnees-hospitalieres-relatives-a-lepidemie-de-covid-19/")
+liens <- doc %>% html_nodes(xpath="//div[@class='resources-list']/article/footer/div/a[@download='']") %>% html_attr('href')
+
+## covid-19
+# dep	= Département
+# sexe = Sexe
+# jour = Date de notification
+# hosp = Nombre de personnes actuellement hospitalisées
+# rea = Nombre de personnes actuellement en réanimation ou soins intensifs
+# rad = Nombre cumulé de personnes retournées à domicile
+# dc = Nombre cumulé de personnes décédées à l'hôpital
+import1 <- read_csv2(liens[1])
+
+## covid-19 - nouveaux
+# dep	= Département
+# sexe = Sexe
+# incid_hosp = Nombre quotidien de personnes nouvellement hospitalisées
+# incid_rea	= Nombre quotidien de nouvelles admissions en réanimation
+# incid_dc = Nombre quotidien de personnes nouvellement décédées
+# incid_rad	= Nombre quotidien de nouveaux retours à domicile
+import2 <- read_csv2(liens[2])
+
+## covid-19 - classe age
+# reg	= Region
+# cl_age90	= Classe age
+# jour = Date de notification
+# hosp = Nombre de personnes actuellement hospitalisées
+# rea	= Nombre de personnes actuellement en réanimation ou soins intensifs
+# rad	= Nombre cumulé de personnes retournées à domicile
+# dc = Nombre cumulé de personnes décédées
+import3 <- read_csv2(liens[3])
+
+popdep <- read_excel("Data_pop.xls", sheet=1)
+popage <- read_excel("Data_pop.xls", sheet=2)
+lits <- read_excel("Data_pop.xls", sheet=3)
+```
+
+```{r data_stock}
+stock <- import1 %>% group_by(jour) %>%
+                     summarise(hosp = sum(hosp),
+                               rea = sum(rea),
+                               dc = sum(dc),
+                               rad = sum(rad)) %>%
+                     pivot_longer(c('hosp','rea','dc','rad')) %>%
+                     mutate(name = factor(name, levels=c('dc','rea','hosp','rad')))
+```
+
+```{r data_stockdep}
+stockdep <- import1 %>% group_by(dep,jour) %>%
+                        summarise(hosp = sum(hosp),
+                                  rea = sum(rea),
+                                  dc = sum(dc),
+                                  rad = sum(rad)) %>%
+                        pivot_longer(c('hosp','rea','dc','rad')) %>%
+                        mutate(name = factor(name, levels=c('dc','rea','hosp','rad')))
+```
+
+```{r data_nouveaux}
+nouveaux <- import2 %>% group_by(jour) %>%
+                        summarise(incid_hosp = sum(incid_hosp),
+                                  incid_rea = sum(incid_rea),
+                                  incid_dc = sum(incid_dc),
+                                  incid_rad = sum(incid_rad)) %>%
+                        pivot_longer(c('incid_hosp','incid_rea','incid_dc','incid_rad')) %>%
+                        mutate(name = factor(name, levels=c('incid_dc','incid_rea','incid_hosp','incid_rad'), labels=c('décès','réanimation','hospitalisation','sorties')))
+
+nouveaux_rel <- import2 %>% group_by(jour) %>%
+                            summarise(incid_hosp = sum(incid_hosp),
+                                      incid_rea = sum(incid_rea),
+                                      incid_dc = sum(incid_dc),
+                                      incid_rad = sum(incid_rad)) %>%
+                            mutate(incid_hosp = incid_hosp/incid_hosp[1],
+                                   incid_rea = incid_rea/incid_rea[1],
+                                   incid_dc = incid_dc/incid_dc[1],
+                                   incid_rad = incid_rad/incid_rad[1]) %>%
+                            pivot_longer(c('incid_hosp','incid_rea','incid_dc','incid_rad')) %>%
+                            mutate(name = factor(name, levels=c('incid_dc','incid_rea','incid_hosp','incid_rad')))
+```
+
+```{r data_nouveauxdep}
+nouveauxdep <- import2 %>% group_by(dep,jour) %>%
+                           summarise(incid_hosp = sum(incid_hosp),
+                                     incid_rea = sum(incid_rea),
+                                     incid_dc = sum(incid_dc),
+                                     incid_rad = sum(incid_rad)) %>%
+                           pivot_longer(c('incid_hosp','incid_rea','incid_dc','incid_rad')) %>%
+                           mutate(name = factor(name, levels=c('incid_dc','incid_rea','incid_hosp','incid_rad'), labels=c('décès','réanimation','hospitalisation','sorties')))
+```
+
+```{r data_parage}
+parage <- import3 %>% group_by(jour, cl_age90) %>%
+                      summarise(hosp = sum(hosp),
+                                rea = sum(rea),
+                                dc = sum(dc),
+                                rad = sum(rad)) %>%
+                                filter(cl_age90!="0") %>%
+                      arrange(cl_age90, jour) %>%
+                      group_by(cl_age90) %>%
+                      mutate(newdc = dc-lag(dc),
+                             newrad = rad-lag(rad)) %>%
+                      ungroup() %>%
+                      mutate(Age = factor(cl_age90, labels=c("0-9","10-19","20-29","30-39","40-49","50-59","60-69","70-79","80-89","90 et +")) %>% fct_rev) %>%
+                      mutate(newdc = ifelse(newdc<0, NA, newdc)) %>%
+                      pivot_longer(c('hosp','rea','dc','rad','newdc','newrad'))
+```
+
+```{r data_parregion}
+parregion <- import3 %>% group_by(jour, reg) %>%
+                         summarise(hosp = sum(hosp),
+                                   rea = sum(rea),
+                                   dc = sum(dc),
+                                   rad = sum(rad)) %>%
+                         arrange(reg, jour) %>%
+                         group_by(reg) %>%
+                         mutate(newdc = dc-lag(dc),
+                                newrad = rad-lag(rad)) %>%
+                         ungroup() %>%
+                         pivot_longer(c('hosp','rea','dc','rad','newdc','newrad'))
+```
+
+```{r smoute}
+smoute <- function(x, k=7) {
+  res <- rollmean(x, k, fill=rep(NA,3))
+  res[1] <- x[1]
+  res[length(x)] <- x[length(x)]
+  res <- na.fill(res, rep('extend',3))
+  return(res)
+}
+```
+
+# Cadrage
+
+## Pyramides des âges
+
+Au 6 avril 2020 (pic)
+
+```{r pyra, fig.align="center", fig.width=7, fig.height=4}
+p1 <- parage %>% filter(jour=='2020-04-08' & name=='hosp') %>%
+                 ggplot(aes(x = Age, y = value, fill = Age)) + 
+                   geom_bar(stat = "identity") +
+                   scale_x_discrete(limits = rev(levels(parage$Age))) +
+                   coord_flip() +
+                   theme_minimal() +
+                   xlab(NULL) + ylab(NULL) +
+                   guides(fill = FALSE) +
+                   theme(plot.title = element_text(size = 10)) +
+                   ggtitle("Répartition par âge \r des personnes hospitalisées")
+
+p2 <- parage %>% filter(jour=='2020-04-08' & name=='rea') %>%
+                 ggplot(aes(x = Age, y = value, fill = Age)) + 
+                   geom_bar(stat = "identity") +
+                   scale_x_discrete(limits = rev(levels(parage$Age))) +
+                   coord_flip() +
+                   theme_minimal() +
+                   xlab(NULL) + ylab(NULL) +
+                   guides(fill = FALSE) +
+                   theme(plot.title = element_text(size = 10)) +
+                   ggtitle("Répartition par âge \r des personnes en réanimation")
+
+p3 <- parage %>% filter(jour=='2020-04-08' & name=='dc') %>%
+                 ggplot(aes(x = Age, y = value, fill = Age)) + 
+                   geom_bar(stat = "identity") +
+                   scale_x_discrete(limits = rev(levels(parage$Age))) +
+                   coord_flip() +
+                   theme_minimal() +
+                   xlab(NULL) + ylab(NULL) +
+                   guides(fill = FALSE) +
+                   theme(plot.title = element_text(size = 10)) +
+                   ggtitle("Répartition par âge \r des personnes décédées")
+
+grid.arrange(p1, p2, p3, ncol=3)
+```
+
+## Taux par âge
+
+Taux pour 100 000 personnes
+
+Les taux d'hospitalisation et de réanimation sont calculés à partir du nombre de personnes concernées le 8 avril 2020 (pic), le taux de mortalité à partir des décès cumulés au dernier jour d'observation.
+
+```{r taux_par_age}
+temp <- parage %>% left_join(popage, by = c("Age" = "age") ) %>%
+                   mutate(rate = round(100000*value/pop2020,2))
+
+lastday <- temp$jour %>% unique %>% rev %>% .[1]
+
+temp1 <- temp %>% filter(name=='hosp' & jour=='2020-04-08') %>% 
+                  select(Age, rate) %>%
+                  rename(`taux hospitalisation`='rate')
+temp2 <- temp %>% filter(name=='rea' & jour=='2020-04-08') %>% 
+                  select(Age, rate) %>%
+                  rename(`taux réanimation`='rate')
+temp3 <- temp %>% filter(name=='dc' & jour==lastday) %>% 
+                  select(Age, rate) %>%
+                  rename(`taux mortalité`='rate')
+
+temp1 %>% left_join(temp2) %>%
+          left_join(temp3) %>%
+          rename(`âge`='Age') %>%
+          kable()
+```
+
+# Evolution des stocks
+
+## Décès cumulés
+
+```{r dc_cum, fig.align="center", fig.width=7, fig.height=4}
+stock %>% filter(name=='dc') %>%
+          ggplot(aes(x = jour, y = value)) + 
+            geom_line() +
+            theme_minimal() +
+            scale_x_date(date_labels = "%d %b", date_breaks = "2 days") +
+            theme(axis.text.x = element_text(angle=60, hjust = 1)) +
+            xlab(NULL) + ylab(NULL) +
+            ggtitle("Nombre de décès cumulés")
+```
+
+## Réanimation et hospitalisation
+
+```{r stocks_reahospi, fig.align="center", fig.width=7, fig.height=4}
+p1 <- stock %>% filter(name=='rea') %>%
+                ggplot(aes(x = jour, y = value)) + 
+                  geom_line() +
+                  theme_minimal() +
+                  scale_x_date(date_labels = "%d %b", date_breaks = "3 days") +
+                  theme(axis.text.x = element_text(angle=60, hjust = 1)) +
+                  xlab(NULL) + ylab(NULL) +
+                  ggtitle("Nombre de personnes en réanimation")
+
+p2 <- stock %>% filter(name=='hosp') %>%
+                ggplot(aes(x = jour, y = value)) + 
+                  geom_line() +
+                  theme_minimal() +
+                  scale_x_date(date_labels = "%d %b", date_breaks = "3 days") +
+                  theme(axis.text.x = element_text(angle=60, hjust = 1)) +
+                  xlab(NULL) + ylab(NULL) +
+                  ggtitle("Nombre de personnes hospitalisées")
+
+grid.arrange(p1, p2, ncol=2)
+```
+
+## Réanimation par région
+
+```{r stocks_rea_region, fig.align="center", fig.width=7, fig.height=4}
+parregion %>% filter(name=='rea' & reg %in% c('11','28','44','53')) %>%
+              ggplot(aes(x = jour, y = value, color = reg)) + 
+                geom_line() +
+                theme_minimal() +
+                scale_x_date(date_labels = "%d %b", date_breaks = "2 days") +
+                theme(axis.text.x = element_text(angle=60, hjust = 1)) +
+                xlab(NULL) + ylab(NULL) +
+                scale_color_hue(name = "", labels = c("Île-de-France","Normandie","Alsace+","Bretagne")) +
+                ggtitle("Nombre de personnes en réanimation par région")
+```
+
+## Réanimation par département
+
+```{r stocks_rea_dept, fig.align="center", fig.width=7, fig.height=4}
+stockdep %>% filter(name=='rea' & dep %in% c('14','36','67','75','93')) %>%
+             ggplot(aes(x = jour, y = value, color=dep)) + 
+               geom_line() +
+               theme_minimal() +
+               scale_x_date(date_labels = "%d %b", date_breaks = "2 days") +
+               theme(axis.text.x = element_text(angle=60, hjust = 1)) +
+               xlab(NULL) + ylab(NULL) +
+               ggtitle("Nombre de personnes en réanimation par département")
+```
+
+```{r taux_occup_dept, fig.align="center", fig.width=7, fig.height=4}
+stockdep %>% left_join(lits, by=c('dep'='code_dept')) %>%
+             mutate(ratio = 100*value/lits_rea) %>% 
+             filter(name=='rea' & dep %in% c('14','36','67','75','93')) %>%
+             ggplot(aes(x = jour, y = ratio, color=dep)) + 
+               geom_line() +
+               theme_minimal() +
+               scale_x_date(date_labels = "%d %b", date_breaks = "2 days") +
+               theme(axis.text.x = element_text(angle=60, hjust = 1)) +
+               xlab(NULL) + ylab(NULL) +
+               geom_hline(aes(yintercept=100), size=0.5, linetype='dashed', color='darkgray') +
+               ggtitle("Taux d'occupation en réanimation par département")
+```
+
+NB : à partir du nombre de lits en réanimation en 2018 (Source: DREES)
+
+## Décès cumulés par âge
+
+```{r dc_cum_age1, fig.align="center", fig.width=7, fig.height=4}
+parage %>% filter(name=='dc') %>% 
+           ggplot(aes(x = jour, y = value, color = Age)) + 
+             geom_line(size = 0.5) +
+             theme_minimal() +
+             scale_x_date(date_labels = "%d %b", date_breaks = "2 days") +
+             theme(axis.text.x = element_text(angle=60, hjust = 1)) +
+             xlab(NULL) + ylab(NULL) +
+             ggtitle("Décès cumulés par âge")
+```
+
+```{r dc_cum_age2, fig.align="center", fig.width=7, fig.height=4}
+parage %>% filter(name=='dc') %>%
+           ggplot(aes(x = jour, y = value, fill = Age)) + 
+             geom_col() +
+             theme_minimal() +
+             scale_x_date(date_labels = "%d %b", date_breaks = "2 days") +
+             theme(axis.text.x = element_text(angle=60, hjust = 1)) +
+             xlab(NULL) + ylab(NULL) +
+             ggtitle("Décès cumulés par âge")
+```
+
+```{r dc_cum_age3, include=FALSE, fig.align="center", fig.width=7, fig.height=4}
+parage %>% filter(name=='dc') %>%
+           ggplot(aes(x = jour, y = value, fill = Age)) + 
+             geom_col(position = "fill") +
+             theme_minimal() +
+             scale_x_date(date_labels = "%d %b", date_breaks = "2 days") +
+             theme(axis.text.x = element_text(angle=60, hjust = 1)) +
+             xlab(NULL) + ylab(NULL) +
+             ggtitle("Décès cumulés par âge")
+```
+
+## Réanimation par âge
+
+```{r stocks_rea_age1, fig.align="center", fig.width=7, fig.height=4}
+parage %>% filter(name=='rea') %>%
+           ggplot(aes(x = jour, y = value, color = Age)) + 
+             geom_line(size = 0.5) +
+             theme_minimal() +
+             scale_x_date(date_labels = "%d %b", date_breaks = "2 days") +
+             theme(axis.text.x = element_text(angle=60, hjust = 1)) +
+             xlab(NULL) + ylab(NULL) +
+             ggtitle("Nombre de personnes en réanimation par âge")
+```
+
+```{r stocks_rea_age2, fig.align="center", fig.width=7, fig.height=4}
+parage %>% filter(name=='rea') %>%
+           ggplot(aes(x = jour, y = value, fill = Age)) + 
+             geom_col() +
+             theme_minimal() +
+             scale_x_date(date_labels = "%d %b", date_breaks = "2 days") +
+             theme(axis.text.x = element_text(angle=60, hjust = 1)) +
+             xlab(NULL) + ylab(NULL) +
+             ggtitle("Nombre de personnes en réanimation par âge")
+```
+
+```{r stocks_rea_age3, include=FALSE, fig.align="center", fig.width=7, fig.height=4}
+parage %>% filter(name=='rea') %>%
+           ggplot(aes(x = jour, y = value, fill = Age)) + 
+             geom_col(position = 'fill') +
+             theme_minimal() +
+             scale_x_date(date_labels = "%d %b", date_breaks = "2 days") +
+             theme(axis.text.x = element_text(angle=60, hjust = 1)) +
+             xlab(NULL) + ylab(NULL) +
+             ggtitle("Nombre de personnes en réanimation par âge")
+```
+
+## Hospitalisations par âge
+
+```{r stocks_hosp_age1, fig.align="center", fig.width=7, fig.height=4}
+parage %>% filter(name=='hosp') %>%
+           ggplot(aes(x = jour, y = value, color = Age)) + 
+             geom_line() + 
+             theme_minimal() +
+             scale_x_date(date_labels = "%d %b", date_breaks = "2 days") +
+             theme(axis.text.x = element_text(angle=60, hjust = 1)) +
+             xlab(NULL) + ylab(NULL) +
+             ggtitle("Nombre de personnes hospitalisées par âge")
+```
+
+```{r stocks_hosp_age2, fig.align="center", fig.width=7, fig.height=4}
+parage %>% filter(name=='hosp') %>%
+           ggplot(aes(x = jour, y = value, fill = Age)) + 
+             geom_col() +
+             theme_minimal() +
+             scale_x_date(date_labels = "%d %b", date_breaks = "2 days") +
+             theme(axis.text.x = element_text(angle=60, hjust = 1)) +
+             xlab(NULL) + ylab(NULL) +
+             ggtitle("Nombre de personnes hospitalisées par âge")
+```
+
+```{r stocks_hosp_age3, include=FALSE, fig.align="center", fig.width=7, fig.height=4}
+parage %>% filter(name=='hosp') %>%
+           ggplot(aes(x = jour, y = value, fill = Age)) + 
+             geom_col(position = 'fill') +
+             theme_minimal() +
+             scale_x_date(date_labels = "%d %b", date_breaks = "2 days") +
+             theme(axis.text.x = element_text(angle=60, hjust = 1)) +
+             xlab(NULL) + ylab(NULL) +
+             ggtitle("Nombre de personnes hospitalisées par âge")
+```
+
+# Evolutions des flux
+
+## Nouveaux cas (réa/hospi/dc/rad)
+
+```{r nouveaux1, fig.align="center", fig.width=7, fig.height=4}
+nouveaux %>% group_by(name) %>%
+             mutate(value = smoute(value)) %>% #rollmean(value, 7, fill=rep("extend",3))) %>%
+             ungroup %>%
+ggplot(aes(jour, value, colour=name)) + 
+  geom_line(size=0.5) +
+  theme_minimal() +
+  scale_x_date(date_labels = "%d %b", date_breaks = "2 days") +
+  theme(axis.text.x = element_text(angle=60, hjust = 1)) +
+  xlab(NULL) + ylab(NULL) +
+  scale_color_manual(values = c('black','brown2','purple','mediumseagreen'), name = "", labels = c("décès", "réanimation", "hospitalisations", "sorties")) +
+  ggtitle("Nouveaux cas")
+```
+
+```{r nouveaux2, fig.align="center", fig.width=7, fig.height=4}
+nouveaux %>% group_by(name) %>%
+             mutate(value = smoute(value)) %>% #rollmean(value, 7, fill=rep("extend",3))) %>%
+             ungroup %>%
+  ggplot(aes(jour, value)) + 
+  geom_line(color = 'black', size = 0.5) +
+  #geom_smooth(span=0.4, se=FALSE, color = 'red', size = 0.5) +
+  theme_minimal() +
+  scale_x_date(date_labels = "%d %b", date_breaks = "2 days") +
+  theme(axis.text.x = element_text(angle=60, hjust = 1)) +
+  xlab(NULL) + ylab(NULL) +
+  facet_wrap(~name, scales = "free_y")
+```
+
+```{r nouveauxrel1, fig.align="center", fig.width=7, fig.height=4}
+nouveaux_rel %>% group_by(name) %>%
+                 mutate(value = smoute(value)) %>% #rollmean(value, 7, fill=rep("extend",3))) %>%
+                 ungroup %>%
+ggplot(aes(jour, value, colour=name)) + 
+  geom_line(size = 0.5) +
+  theme_minimal() +
+  scale_x_date(date_labels = "%d %b", date_breaks = "2 days") +
+  theme(axis.text.x = element_text(angle=60, hjust = 1)) +
+  xlab(NULL) + ylab(NULL) +
+  scale_color_manual(values = c('black','brown2','purple','mediumseagreen'), name = "", labels = c("décès", "réanimation", "hospitalisations", "sorties")) +
+  ggtitle("Nouveaux cas (base 1)")
+```
+
+## Excédent de sorties de l'hôpital
+
+```{r excedent, fig.align="center", fig.width=7, fig.height=4}
+import2 %>% group_by(jour) %>%
+            summarise(hosp = sum(incid_hosp),
+                      rad = sum(incid_rad)) %>%
+            mutate(diff = rad-hosp) %>%
+ggplot(aes(jour, smoute(diff))) + 
+  geom_line(size=0.5) +
+  theme_minimal() +
+  scale_x_date(date_labels = "%d %b", date_breaks = "2 days") +
+  theme(axis.text.x = element_text(angle=60, hjust = 1)) +
+  xlab(NULL) + ylab(NULL) +
+  geom_hline(aes(yintercept=0), size=0.5, linetype='dashed', color='darkgray') +
+  ggtitle("Différence entre sorties et entrées de l'hôpital")
+```
+
+## Décès par région
+
+```{r new_dc_region, fig.align="center", fig.width=7, fig.height=4}
+parregion %>% filter(name=='newdc' & reg %in% c('11','28','44','53')) %>%
+              ggplot(aes(x = jour, y = value, color = reg)) + 
+                geom_line(aes(y = smoute(value))) + #rollmean(value, 7, fill=rep("extend",3)))) +
+                theme_minimal() +
+                scale_x_date(date_labels = "%d %b", date_breaks = "2 days") +
+                theme(axis.text.x = element_text(angle=60, hjust = 1)) +
+                xlab(NULL) + ylab(NULL) +
+                scale_color_hue(name = "", labels = c("Île-de-France","Normandie","Alsace+","Bretagne")) +
+                ggtitle("Décès par région")
+```
+
+## Décès par département
+
+```{r new_dc_dept, fig.align="center", fig.width=7, fig.height=4}
+nouveauxdep %>% filter(name=='décès' & dep %in% c('14','36','67','75','93')) %>%
+                ggplot(aes(x = jour, y = value, color=dep)) + 
+                  geom_line(aes(y = smoute(value))) + #rollmean(value, 7, fill=rep("extend",3)))) +
+                  theme_minimal() +
+                  scale_x_date(date_labels = "%d %b", date_breaks = "2 days") +
+                  theme(axis.text.x = element_text(angle=60, hjust = 1)) +
+                  xlab(NULL) + ylab(NULL) +
+                  ggtitle("Décès par département")
+```
+
+## Réanimation par département
+
+```{r new_rea_dept, fig.align="center", fig.width=7, fig.height=4}
+nouveauxdep %>% filter(name=='réanimation' & dep %in% c('14','36','67','75','93')) %>%
+                ggplot(aes(x = jour, y = value, color=dep)) + 
+                  geom_line(aes(y = smoute(value))) + #rollmean(value, 7, fill=rep("extend",3))), size = 0.5) +
+                  theme_minimal() +
+                  scale_x_date(date_labels = "%d %b", date_breaks = "2 days") +
+                  theme(axis.text.x = element_text(angle=60, hjust = 1)) +
+                  xlab(NULL) + ylab(NULL) +
+                  ggtitle("Nouveaux cas en réanimation par département")
+```
+
+## Décès par âge
+
+```{r new_dc_age1, fig.align="center", fig.width=7, fig.height=4}
+parage %>% filter(name=='newdc') %>%
+           ggplot(aes(x = jour, y = value, color = Age)) + 
+             geom_line(aes(y = smoute(value))) + #rollmean(value, 7, fill=rep("extend",3)))) +
+             theme_minimal() +
+             scale_x_date(date_labels = "%d %b", date_breaks = "2 days") +
+             theme(axis.text.x = element_text(angle=60, hjust = 1)) +
+             xlab(NULL) + ylab(NULL) +
+             ggtitle("Décès par âge")
+```
+
+```{r new_dc_age2, fig.align="center", fig.width=7, fig.height=4}
+parage %>% filter(name=='newdc') %>%
+            ggplot(aes(x = jour, y = value, fill = Age)) + 
+              geom_col() +
+              theme_minimal() +
+              scale_x_date(date_labels = "%d %b", date_breaks = "2 days") +
+              theme(axis.text.x = element_text(angle=60, hjust = 1)) +
+              xlab(NULL) + ylab(NULL) +
+              ggtitle("Décès par âge")
+```
+
+```{r new_dc_age3, include=FALSE, fig.align="center", fig.width=7, fig.height=4}
+parage %>% filter(name=='newdc') %>%
+           ggplot(aes(x = jour, y = value, fill = Age)) + 
+             geom_col(position = "fill") +
+             theme_minimal() +
+             scale_x_date(date_labels = "%d %b", date_breaks = "2 days") +
+             theme(axis.text.x = element_text(angle=60, hjust = 1)) +
+             xlab(NULL) + ylab(NULL) +
+             ggtitle("Décès par âge")
+```
