@@ -33,6 +33,28 @@ output:
     -   [Réanimation par département](#réanimation-par-département-1)
     -   [Décès par âge](#décès-par-âge)
 
+-   [Données](#données)
+-   [Cadrage](#cadrage)
+    -   [Pyramides des âges](#pyramides-des-âges)
+    -   [Taux par âge](#taux-par-âge)
+-   [Evolution des stocks](#evolution-des-stocks)
+    -   [Décès cumulés](#décès-cumulés)
+    -   [Réanimation et
+        hospitalisation](#réanimation-et-hospitalisation)
+    -   [Réanimation par région](#réanimation-par-région)
+    -   [Réanimation par département](#réanimation-par-département)
+    -   [Décès cumulés par âge](#décès-cumulés-par-âge)
+    -   [Réanimation par âge](#réanimation-par-âge)
+    -   [Hospitalisations par âge](#hospitalisations-par-âge)
+-   [Evolutions des flux](#evolutions-des-flux)
+    -   [Nouveaux cas (réa/hospi/dc/rad)](#nouveaux-cas-réahospidcrad)
+    -   [Excédent de sorties de
+        l’hôpital](#excédent-de-sorties-de-lhôpital)
+    -   [Décès par région](#décès-par-région)
+    -   [Décès par département](#décès-par-département)
+    -   [Réanimation par département](#réanimation-par-département-1)
+    -   [Décès par âge](#décès-par-âge)
+
 Données
 =======
 
@@ -64,14 +86,14 @@ mortalité à partir des décès cumulés au dernier jour d’observation.
 |:--------|---------------------:|-----------------:|---------------:|
 | 0-9     |                  1.02|              0.34|            0.03|
 | 10-19   |                  1.00|              0.26|            0.04|
-| 20-29   |                  4.74|              0.80|            0.23|
-| 30-39   |                 11.02|              2.82|            0.82|
-| 40-49   |                 23.10|              6.76|            2.33|
-| 50-59   |                 47.42|             17.20|            8.15|
-| 60-69   |                 77.54|             29.00|           23.39|
-| 70-79   |                120.54|             33.25|           63.74|
-| 80-89   |                201.75|              8.88|          186.41|
-| 90 et + |                298.65|              1.86|          371.53|
+| 20-29   |                  4.74|              0.80|            0.24|
+| 30-39   |                 11.02|              2.82|            0.83|
+| 40-49   |                 23.10|              6.76|            2.35|
+| 50-59   |                 47.42|             17.20|            8.26|
+| 60-69   |                 77.54|             29.00|           23.71|
+| 70-79   |                120.54|             33.25|           64.51|
+| 80-89   |                201.75|              8.88|          187.98|
+| 90 et + |                298.65|              1.86|          376.36|
 
 Evolution des stocks
 ====================
