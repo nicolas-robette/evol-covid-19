@@ -1,21 +1,22 @@
 ---
 title: "Evolutions Covid-19 (France)"
-date: "2020-05-06"
+date: "2020-05-07"
 output:
   md_document:
     variant: markdown_github
     preserve_yaml: TRUE
     toc: TRUE
-#  rmdformats::html_clean:
-#    thumbnails: FALSE 
-#    use_bookdown: FALSE 
+ # rmdformats::html_clean:
+ #   thumbnails: FALSE
+ #   use_bookdown: FALSE
 ---
 
 -   [Données](#données)
 -   [Cadrage](#cadrage)
     -   [Pyramides des âges](#pyramides-des-âges)
     -   [Taux par âge](#taux-par-âge)
--   [Evolution des stocks](#evolution-des-stocks)
+-   [Evolution des “stocks” (nb de
+    cas)](#evolution-des-stocks-nb-de-cas)
     -   [Décès cumulés](#décès-cumulés)
     -   [Réanimation et
         hospitalisation](#réanimation-et-hospitalisation)
@@ -24,8 +25,9 @@ output:
     -   [Décès cumulés par âge](#décès-cumulés-par-âge)
     -   [Réanimation par âge](#réanimation-par-âge)
     -   [Hospitalisations par âge](#hospitalisations-par-âge)
--   [Evolutions des flux](#evolutions-des-flux)
-    -   [Nouveaux cas (réa/hospi/dc/rad)](#nouveaux-cas-réahospidcrad)
+-   [Evolutions des “flux” (nb de *nouveaux*
+    cas)](#evolutions-des-flux-nb-de-nouveaux-cas)
+    -   [Nouveaux cas](#nouveaux-cas)
     -   [Excédent de sorties de
         l’hôpital](#excédent-de-sorties-de-lhôpital)
     -   [Décès par région](#décès-par-région)
@@ -64,17 +66,17 @@ mortalité à partir des décès cumulés au dernier jour d’observation.
 |:--------|---------------------:|-----------------:|---------------:|
 | 0-9     |                  1.02|              0.34|            0.03|
 | 10-19   |                  1.00|              0.26|            0.04|
-| 20-29   |                  4.74|              0.80|            0.23|
-| 30-39   |                 11.02|              2.82|            0.82|
-| 40-49   |                 23.10|              6.76|            2.33|
-| 50-59   |                 47.42|             17.20|            8.15|
-| 60-69   |                 77.54|             29.00|           23.39|
-| 70-79   |                120.54|             33.25|           63.74|
-| 80-89   |                201.75|              8.88|          186.41|
-| 90 et + |                298.65|              1.86|          371.53|
+| 20-29   |                  4.74|              0.80|            0.25|
+| 30-39   |                 11.02|              2.82|            0.86|
+| 40-49   |                 23.10|              6.76|            2.36|
+| 50-59   |                 47.42|             17.20|            8.41|
+| 60-69   |                 77.54|             29.00|           23.96|
+| 70-79   |                120.54|             33.25|           64.95|
+| 80-89   |                201.75|              8.88|          189.73|
+| 90 et + |                298.65|              1.86|          379.43|
 
-Evolution des stocks
-====================
+Evolution des “stocks” (nb de cas)
+==================================
 
 Décès cumulés
 -------------
@@ -121,11 +123,11 @@ Hospitalisations par âge
 
 <img src="README_files/figure-markdown_github/stocks_hosp_age2-1.png" style="display: block; margin: auto;" />
 
-Evolutions des flux
-===================
+Evolutions des “flux” (nb de *nouveaux* cas)
+============================================
 
-Nouveaux cas (réa/hospi/dc/rad)
--------------------------------
+Nouveaux cas
+------------
 
 <img src="README_files/figure-markdown_github/nouveaux1-1.png" style="display: block; margin: auto;" />
 
